@@ -1,58 +1,49 @@
 // Create Web Server
 // Run: node comments.js
-// Access: http://localhost:3000/comments
-// Comments: http://localhost:3000/comments?name=John&comment=Hello
-// Comments: http://localhost:3000/comments?name=John&comment=Hello&delete=1
+// View at: http://localhost:8080
 
 var http = require('http');
 var url = require('url');
-var fs = require('fs');
-var qs = require('querystring');
+var util = require('util');
+var querystring = require('querystring');
 
-http.createServer(function (req, res) {
-  var q = url.parse(req.url, true);
-  var filename = "." + q.pathname;
-  console.log(filename);
-  if (filename == './comments') {
-    var qdata = q.query;
-    console.log(qdata);
-    if (qdata.name && qdata.comment) {
-      fs.appendFile('comments.txt', qdata.name + ' ' + qdata.comment + '\n', function (err) {
-        if (err) throw err;
-        console.log('Saved!');
-      });
+var comments = [];
+
+http.createServer(function(req, res) {
+    // Parse URL
+    var pathname = url.parse(req.url).pathname;
+
+    // If request is for favicon.ico, return 404
+    if (pathname === '/favicon.ico') {
+        return;
     }
-    if (qdata.delete) {
-      fs.writeFile('comments.txt', '', function (err) {
-        if (err) throw err;
-        console.log('Deleted!');
-      });
+
+    // If request is to add comment, get query string
+    var query = url.parse(req.url).query;
+
+    // If query string exists, add comment
+    if (query) {
+        var comment = querystring.parse(query)['comment'];
+        comments.push(comment);
     }
-    fs.readFile('comments.txt', function(err, data) {
-      res.writeHead(200, {'Content-Type': 'text/html'});
-      res.write('<form action="comments">');
-      res.write('Name: <input type="text" name="name"><br>');
-      res.write('Comment: <input type="text" name="comment"><br>');
-      res.write('<input type="submit">');
-      res.write('</form>');
-      res.write('<br>');
-      res.write('<a href="comments?delete=1">Delete</a>');
-      res.write('<br>');
-      res.write('<br>');
-      res.write('Comments:');
-      res.write('<br>');
-      res.write(data);
-      res.end();
-    });
-  } else {
-    fs.readFile(filename, function(err, data) {
-      if (err) {
-        res.writeHead(404, {'Content-Type': 'text/html'});
-        return res.end("404 Not Found");
-      }
-      res.writeHead(200, {'Content-Type': 'text/html'});
-      res.write(data);
-      return res.end();
-    });
-  }
-}).listen(3000);
+
+    // Write HTML
+    res.writeHead(200, {'Content-Type': 'text/html'});
+
+    res.write('<html><head><title>Comments</title></head><body>');
+    res.write('<h1>Comments</h1>');
+
+    // Write comments
+    for (var i = 0; i < comments.length; i++) {
+        res.write('<p>' + comments[i] + '</p>');
+    }
+
+    // Write form
+    res.write('<form action="/" method="get">');
+    res.write('<input type="text" name="comment">');
+    res.write('<input type="submit" value="Submit">');
+    res.write('</form>');
+
+    res.write('</body></html>');
+    res.end();
+}).listen(8080);
