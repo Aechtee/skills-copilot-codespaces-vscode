@@ -1,4 +1,4 @@
-// Create Web server application
+// Create Web server 
 // Run: node comments.js
 // Node.js - ExpressJS Framework - Comments Application
 
